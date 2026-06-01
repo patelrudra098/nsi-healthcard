@@ -1,45 +1,48 @@
 import { z } from "zod";
 
-/** Optional free-text field that tolerates an empty string from the form. */
-const optionalText = (max: number) =>
-  z.string().trim().max(max, `Keep it under ${max} characters`).optional();
-
-/** Optional whole-number field kept as a string in the form, validated by range. */
-const optionalNumberString = (min: number, max: number, message: string) =>
+/** Required free-text field with a friendly "this is required" message. */
+const requiredText = (max: number, requiredMessage: string) =>
   z
     .string()
     .trim()
-    .optional()
+    .min(1, requiredMessage)
+    .max(max, `Keep it under ${max} characters`);
+
+/** Required whole-number field (kept as a string in the form), validated by range. */
+const requiredNumberString = (
+  min: number,
+  max: number,
+  requiredMessage: string,
+  rangeMessage: string,
+) =>
+  z
+    .string()
+    .trim()
+    .min(1, requiredMessage)
     .refine(
-      (value) =>
-        !value || (/^\d+$/.test(value) && Number(value) >= min && Number(value) <= max),
-      message,
+      (value) => /^\d+$/.test(value) && Number(value) >= min && Number(value) <= max,
+      rangeMessage,
     );
 
 export const familyProfileSchema = z.object({
-  city: optionalText(120),
-  state: optionalText(120),
-  age: optionalNumberString(1, 120, "Age must be between 1 and 120"),
-  maritalStatus: z.enum(["MARRIED", "SINGLE"]).or(z.literal("")).optional(),
-  familyMemberCount: optionalNumberString(1, 30, "Enter between 1 and 30"),
+  city: requiredText(120, "City is required"),
+  state: requiredText(120, "State is required"),
+  age: requiredNumberString(1, 120, "Age is required", "Age must be between 1 and 120"),
+  maritalStatus: z.string().min(1, "Select your marital status"),
+  familyMemberCount: requiredNumberString(
+    1,
+    30,
+    "Number of family members is required",
+    "Enter between 1 and 30",
+  ),
   hasChildren: z.boolean().optional(),
   hasElderlyParents: z.boolean().optional(),
   hasHealthCondition: z.boolean().optional(),
-  primaryCook: optionalText(120),
-  healthDecisionMaker: optionalText(120),
+  primaryCook: requiredText(120, "Tell us who cooks most meals"),
+  healthDecisionMaker: requiredText(120, "Tell us who takes health decisions"),
 });
 
 export type FamilyProfileInput = z.infer<typeof familyProfileSchema>;
-
-export const improvementPlanSchema = z.object({
-  biggestGap: optionalText(1000),
-  habitToImprove: optionalText(1000),
-  patternToReduce: optionalText(1000),
-  dailyFamilyHabit: optionalText(1000),
-  targetScore: optionalNumberString(1, 100, "Enter a percentage between 1 and 100"),
-});
-
-export type ImprovementPlanInput = z.infer<typeof improvementPlanSchema>;
 
 export interface SectionAnswer {
   questionKey: string;

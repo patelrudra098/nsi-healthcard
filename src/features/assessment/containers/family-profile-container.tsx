@@ -89,7 +89,7 @@ export function FamilyProfileContainer() {
       city: values.city?.trim() || undefined,
       state: values.state?.trim() || undefined,
       age: values.age ? Number(values.age) : undefined,
-      maritalStatus: values.maritalStatus || undefined,
+      maritalStatus: (values.maritalStatus as "MARRIED" | "SINGLE") || undefined,
       familyMemberCount: values.familyMemberCount
         ? Number(values.familyMemberCount)
         : undefined,
@@ -119,14 +119,16 @@ export function FamilyProfileContainer() {
             A little about your family
           </h1>
           <p className="text-pretty mx-auto max-w-xl text-sm text-[var(--text-muted)]">
-            This helps us understand your context. Everything here is optional.
+            This helps us understand your family context. All fields are required
+            to continue.
           </p>
         </div>
 
         <div className="flex items-start gap-3 rounded-[var(--radius-md)] bg-[var(--info-soft)] px-4 py-3 text-[var(--info)]">
           <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <p className="text-sm">
-            This information helps understand your family context. It is not scored.
+            These details give context to your scorecard — they are not scored, but
+            all fields are required to continue.
           </p>
         </div>
 
@@ -166,6 +168,11 @@ export function FamilyProfileContainer() {
                   </Select>
                 )}
               />
+              {form.formState.errors.maritalStatus && (
+                <p className="text-xs font-medium text-[var(--destructive)]">
+                  {form.formState.errors.maritalStatus.message}
+                </p>
+              )}
             </div>
             <Input
               label="Number of family members"
@@ -227,14 +234,7 @@ export function FamilyProfileContainer() {
           </div>
         </div>
 
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => router.push(SLEEP_ROUTE)}
-          >
-            Skip for now
-          </Button>
+        <div className="flex justify-end">
           <Button type="submit" size="lg" isLoading={saveProfile.isPending}>
             Save &amp; continue
             <ArrowRight className="size-4" aria-hidden="true" />
