@@ -5,7 +5,7 @@ function required(value: string | undefined, fallback: string): string {
 export const env = {
   apiUrl: required(
     process.env.NEXT_PUBLIC_API_URL,
-    "http://healthcard-api.growithnsi.com/api/v1",
+    "https://healthcard-api.growithnsi.com/api/v1",
   ),
   appName: "NSI Family Health Scorecard",
   isProd: process.env.NODE_ENV === "production",
