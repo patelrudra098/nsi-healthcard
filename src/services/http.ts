@@ -15,14 +15,21 @@ export function setUnauthorizedHandler(fn: (() => void) | null): void {
   onUnauthorized = fn;
 }
 
+// The ngrok free-tunnel interstitial bypass header is ONLY needed for local dev
+// against an ngrok URL. In production it's a non-simple header that gets added to
+// the CORS preflight's Access-Control-Request-Headers; the real backend doesn't
+// allow it, so the preflight is rejected and every call fails with a CORS error.
+const usingNgrok = env.apiUrl.includes("ngrok");
+const ngrokHeader = usingNgrok
+  ? { "ngrok-skip-browser-warning": "true" }
+  : {};
+
 export const http = axios.create({
   baseURL: env.apiUrl,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
-    // Bypasses ngrok's HTML interstitial when developing against a free tunnel.
-    // Real backends ignore unknown headers, so it's safe to send everywhere.
-    "ngrok-skip-browser-warning": "true",
+    ...ngrokHeader,
   },
   timeout: 20000,
 });
@@ -51,7 +58,7 @@ async function refreshAccessToken(): Promise<string> {
     {},
     {
       withCredentials: true,
-      headers: { "ngrok-skip-browser-warning": "true" },
+      headers: { ...ngrokHeader },
     },
   );
   const token = res.data.data.accessToken;
