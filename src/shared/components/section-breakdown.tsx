@@ -12,7 +12,7 @@ interface SectionBreakdownProps {
   className?: string;
 }
 
-function SectionRow({
+function SectionTile({
   section,
   isWeakest,
 }: {
@@ -29,34 +29,28 @@ function SectionRow({
   }, [pct]);
 
   return (
-    <li className="space-y-1.5">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate text-sm font-medium text-[var(--text-primary)]">
-            {section.label}
-          </span>
-          {section.isBonus && (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--cat-violet-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--cat-violet)]">
-              <Sparkles className="size-3" aria-hidden="true" />
-              Bonus
-            </span>
-          )}
-          {isWeakest && (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--warning-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--warning)]">
-              <AlertTriangle className="size-3" aria-hidden="true" />
-              Focus
-            </span>
-          )}
-        </div>
+    <li
+      className={cn(
+        "flex flex-col gap-3 rounded-[var(--radius-lg)] border p-4 transition-colors duration-150",
+        isWeakest
+          ? "border-[color-mix(in_srgb,var(--warning)_35%,transparent)] bg-[var(--warning-soft)]"
+          : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)]",
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-sm font-medium leading-snug text-[var(--text-primary)]">
+          {section.label}
+        </span>
         <span
-          className="shrink-0 text-sm font-semibold tabular-nums"
+          className="shrink-0 font-heading text-lg font-bold leading-none tabular-nums"
           style={{ color }}
         >
           {pct}%
         </span>
       </div>
+
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-[var(--muted)]"
+        className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--muted)]"
         role="progressbar"
         aria-valuenow={pct}
         aria-valuemin={0}
@@ -72,20 +66,37 @@ function SectionRow({
           }}
         />
       </div>
+
+      {(section.isBonus || isWeakest) && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {section.isBonus && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--cat-violet-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--cat-violet)]">
+              <Sparkles className="size-3" aria-hidden="true" />
+              Bonus
+            </span>
+          )}
+          {isWeakest && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--warning)_18%,transparent)] px-2 py-0.5 text-[10px] font-semibold text-[var(--warning)]">
+              <AlertTriangle className="size-3" aria-hidden="true" />
+              Focus
+            </span>
+          )}
+        </div>
+      )}
     </li>
   );
 }
 
-/** Vertical list of section scores with animated bars and bonus/focus tags. */
+/** Responsive bento grid of section scores — compact tiles with animated bars. */
 export function SectionBreakdown({
   sections,
   weakestKey,
   className,
 }: SectionBreakdownProps) {
   return (
-    <ul className={cn("space-y-4", className)}>
+    <ul className={cn("grid gap-3 sm:grid-cols-2 xl:grid-cols-3", className)}>
       {sections.map((section) => (
-        <SectionRow
+        <SectionTile
           key={section.sectionKey}
           section={section}
           isWeakest={section.sectionKey === weakestKey}

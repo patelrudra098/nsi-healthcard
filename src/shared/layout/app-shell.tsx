@@ -59,7 +59,6 @@ export function AppShell({
         navItems={navItems}
         collapsed={collapsed}
         onToggleCollapse={toggleCollapse}
-        homeHref={homeHref}
       />
 
       <MobileNav
@@ -73,6 +72,7 @@ export function AppShell({
         <Navbar
           heading={heading}
           user={user}
+          homeHref={homeHref}
           onOpenMobile={() => setMobileOpen(true)}
           onLogout={onLogout}
           isLoggingOut={isLoggingOut}

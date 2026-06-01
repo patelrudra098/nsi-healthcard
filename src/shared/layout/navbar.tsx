@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { LogOut, Menu } from "lucide-react";
+import { Logo } from "@/shared/components/logo";
 import { Avatar } from "@/shared/ui/avatar";
 import {
   DropdownMenu,
@@ -17,15 +19,17 @@ import type { ShellUser } from "./types";
 interface NavbarProps {
   heading?: string;
   user: ShellUser | null;
+  homeHref: string;
   onOpenMobile: () => void;
   onLogout: () => void;
   isLoggingOut?: boolean;
 }
 
-/** Sticky top bar: mobile hamburger, page heading, and the user menu. */
+/** Sticky top bar: mobile hamburger, brand logo, page heading, and the user menu. */
 export function Navbar({
   heading,
   user,
+  homeHref,
   onOpenMobile,
   onLogout,
   isLoggingOut,
@@ -41,10 +45,24 @@ export function Navbar({
         <Menu className="size-5" aria-hidden="true" />
       </button>
 
+      <Link
+        href={homeHref}
+        aria-label="NSI Health home"
+        className="rounded-[var(--radius-sm)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+      >
+        <Logo />
+      </Link>
+
       {heading && (
-        <h2 className="truncate font-heading text-base font-semibold text-[var(--text-primary)]">
-          {heading}
-        </h2>
+        <>
+          <span
+            aria-hidden="true"
+            className="hidden h-6 w-px bg-[var(--border)] md:block"
+          />
+          <h2 className="hidden truncate font-heading text-base font-semibold text-[var(--text-primary)] md:block">
+            {heading}
+          </h2>
+        </>
       )}
 
       <div className="ml-auto flex items-center gap-2">
