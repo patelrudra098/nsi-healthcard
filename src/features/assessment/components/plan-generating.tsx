@@ -2,20 +2,20 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 const STEPS = [
-  "Reviewing your answers…",
-  "Pinpointing your biggest opportunity…",
-  "Shaping your 21-day family plan…",
-  "Almost ready…",
+  "Reading your nine lifestyle areas",
+  "Pinpointing your biggest opportunity",
+  "Designing your 21-day family habits",
+  "Finishing the finer details",
 ] as const;
 
 /**
- * Premium brand "generating" experience for the improvement plan.
- * Radar pulses + a rotating scanner sweep + an orbiting accent dot around a
- * gently breathing HealthCard mark, with cycling status captions. Honours
- * prefers-reduced-motion by falling back to a calm static composition.
+ * Generation experience for the improvement plan. Deliberately restrained:
+ * a single confident progress arc, a slow breathing halo, a glass sheen that
+ * sweeps the HealthCard mark, and blurred caption cross-fades. No orbiting
+ * trinkets — the goal is "handcrafted", not "busy". Honours reduced motion.
  */
 export function PlanGenerating() {
   const reduce = useReducedMotion();
@@ -24,107 +24,114 @@ export function PlanGenerating() {
   useEffect(() => {
     if (reduce) return;
     const id = setInterval(() => {
-      setStep((current) => (current < STEPS.length - 1 ? current + 1 : current));
-    }, 1100);
+      setStep((current) => (current + 1) % STEPS.length);
+    }, 1700);
     return () => clearInterval(id);
   }, [reduce]);
 
   return (
     <div
-      className="flex min-h-[70dvh] flex-col items-center justify-center gap-10 py-12 text-center"
+      className="flex min-h-[70dvh] flex-col items-center justify-center gap-11 py-12 text-center"
       role="status"
       aria-live="polite"
     >
-      <div className="relative grid size-[200px] place-items-center">
-        {/* Radar pulse rings */}
-        {!reduce &&
-          [0, 1, 2].map((i) => (
-            <motion.span
-              key={i}
-              aria-hidden="true"
-              className="absolute inset-0 rounded-full border border-[var(--primary)]"
-              initial={{ scale: 0.55, opacity: 0.45 }}
-              animate={{ scale: 1.25, opacity: 0 }}
-              transition={{
-                duration: 2.4,
-                repeat: Infinity,
-                ease: "easeOut",
-                delay: i * 0.8,
-              }}
-            />
-          ))}
+      <div className="relative grid size-[152px] place-items-center">
+        {/* Breathing halo */}
+        <motion.span
+          aria-hidden="true"
+          className="absolute inset-0 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, color-mix(in srgb, var(--primary) 20%, transparent) 0%, transparent 68%)",
+            filter: "blur(6px)",
+          }}
+          animate={reduce ? undefined : { opacity: [0.4, 0.75, 0.4], scale: [0.94, 1.06, 0.94] }}
+          transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+        />
 
-        {/* Rotating scanner sweep */}
-        {!reduce && (
-          <motion.span
-            aria-hidden="true"
-            className="absolute inset-2 rounded-full"
-            style={{
-              background:
-                "conic-gradient(from 0deg, transparent 0deg, color-mix(in srgb, var(--primary) 30%, transparent) 60deg, transparent 130deg)",
-              maskImage: "radial-gradient(circle, transparent 52%, black 54%)",
-              WebkitMaskImage: "radial-gradient(circle, transparent 52%, black 54%)",
-            }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2.8, repeat: Infinity, ease: "linear" }}
-          />
-        )}
-
-        {/* Orbiting accent dot */}
-        {!reduce && (
-          <motion.span
-            aria-hidden="true"
-            className="absolute inset-0"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3.6, repeat: Infinity, ease: "linear" }}
-          >
-            <span className="absolute left-1/2 top-0 size-2.5 -translate-x-1/2 rounded-full bg-[var(--cat-amber)] shadow-[0_0_12px_var(--cat-amber)]" />
-          </motion.span>
-        )}
-
-        {/* Brand mark */}
-        <motion.div
-          className="relative grid size-[104px] place-items-center rounded-full bg-white shadow-[var(--shadow-lg)] ring-1 ring-[var(--border)]"
-          animate={reduce ? undefined : { scale: [1, 1.045, 1] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        {/* Progress arc — the single hero motion */}
+        <svg
+          viewBox="0 0 100 100"
+          className="absolute inset-0 size-full"
+          fill="none"
+          aria-hidden="true"
         >
+          <circle
+            cx="50"
+            cy="50"
+            r="45"
+            stroke="var(--primary-soft)"
+            strokeWidth="2.5"
+          />
+          <motion.circle
+            cx="50"
+            cy="50"
+            r="45"
+            stroke="var(--primary)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeDasharray="70 213"
+            style={{ transformBox: "fill-box", transformOrigin: "center" }}
+            animate={reduce ? { rotate: -45 } : { rotate: 360 }}
+            transition={
+              reduce
+                ? { duration: 0 }
+                : { duration: 1.25, repeat: Infinity, ease: "linear" }
+            }
+          />
+        </svg>
+
+        {/* Brand mark with a glass sheen sweep */}
+        <div className="relative grid size-[112px] place-items-center overflow-hidden rounded-full bg-white shadow-[var(--shadow-lg)] ring-1 ring-[var(--border)]">
           <Image
             src="/logo-mark.png"
             alt=""
-            width={84}
-            height={84}
+            width={92}
+            height={92}
             priority
-            sizes="84px"
-            className="size-[84px] rounded-full object-cover"
+            sizes="92px"
+            className="size-[92px] rounded-full object-cover"
           />
-        </motion.div>
-      </div>
-
-      <div className="flex flex-col items-center gap-4">
-        <h2 className="font-heading text-xl font-bold tracking-tight text-[var(--text-primary)]">
-          Creating your improvement plan
-        </h2>
-        <div className="h-5 overflow-hidden">
-          <motion.p
-            key={step}
-            initial={reduce ? false : { y: 8, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-            className="text-sm text-[var(--text-muted)]"
-          >
-            {STEPS[step]}
-          </motion.p>
-        </div>
-
-        {/* Indeterminate progress shuttle */}
-        <div className="relative h-1 w-56 overflow-hidden rounded-full bg-[var(--primary-soft)]">
           {!reduce && (
             <motion.span
-              className="absolute inset-y-0 w-1/3 rounded-full bg-[var(--primary)]"
-              animate={{ x: ["-110%", "330%"] }}
-              transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2"
+              style={{
+                background:
+                  "linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.6) 50%, transparent 62%)",
+              }}
+              animate={{ x: ["0%", "320%"] }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                repeatDelay: 1.6,
+                ease: "easeInOut",
+              }}
             />
           )}
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center gap-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--primary)]">
+          Building your plan
+        </p>
+        <h2 className="font-heading text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+          Crafting your improvement plan
+        </h2>
+        <div className="relative h-6 w-[19rem] max-w-[80vw]">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={step}
+              initial={reduce ? false : { y: 6, opacity: 0, filter: "blur(4px)" }}
+              animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+              exit={reduce ? undefined : { y: -6, opacity: 0, filter: "blur(4px)" }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute inset-0 text-sm text-[var(--text-muted)]"
+            >
+              {reduce ? "Creating your improvement plan…" : STEPS[step]}
+            </motion.p>
+          </AnimatePresence>
         </div>
       </div>
     </div>
