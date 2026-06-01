@@ -7,6 +7,6 @@ export const env = {
     process.env.NEXT_PUBLIC_API_URL,
     "https://healthcard-api.growithnsi.com/api/v1",
   ),
-  appName: "NSI Family Health Scorecard",
+  appName: "HealthCard by Growith NSI",
   isProd: process.env.NODE_ENV === "production",
 } as const;

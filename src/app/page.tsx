@@ -20,5 +20,5 @@ export default function Home() {
     router.replace(user?.role === ROLES.ADMIN ? ROUTES.admin : ROUTES.dashboard);
   }, [isHydrated, isAuthenticated, user?.role, router]);
 
-  return <FullPageLoader label="Loading NSI Health…" />;
+  return <FullPageLoader label="Loading HealthCard…" />;
 }

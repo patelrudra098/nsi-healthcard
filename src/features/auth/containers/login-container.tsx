@@ -139,7 +139,7 @@ export function LoginContainer() {
       </form>
 
       <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
-        New to NSI Health?{" "}
+        New to HealthCard?{" "}
         <Link
           href={ROUTES.register}
           className="font-semibold text-[var(--primary)] outline-none hover:underline focus-visible:underline"

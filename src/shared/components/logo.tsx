@@ -8,27 +8,27 @@ interface LogoProps {
   size?: number;
 }
 
-/** NSI Family Health Scorecard brand mark. Presentational only. */
+/** HealthCard (by Growith NSI) brand mark. Presentational only. */
 export function Logo({ showText = true, className, size = 38 }: LogoProps) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <Image
-        src="/Cropped_Square_Image.png"
-        alt="NSI Health"
+        src="/logo-mark.png"
+        alt="HealthCard"
         width={size}
         height={size}
         priority
         sizes={`${size}px`}
-        className="shrink-0 rounded-full object-cover ring-1 ring-[var(--border)]"
+        className="shrink-0 rounded-full object-cover"
         style={{ width: size, height: size }}
       />
       {showText && (
         <span className="flex flex-col leading-none">
           <span className="font-heading text-[15px] font-bold tracking-tight text-[var(--text-primary)]">
-            NSI Health
+            HealthCard
           </span>
           <span className="text-[11px] font-medium text-[var(--text-muted)]">
-            Family Scorecard
+            by Growith NSI
           </span>
         </span>
       )}

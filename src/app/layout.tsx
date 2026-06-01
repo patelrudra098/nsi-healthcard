@@ -19,12 +19,12 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "NSI Family Health Scorecard",
-    template: "%s | NSI Health Scorecard",
+    default: "HealthCard by Growith NSI",
+    template: "%s | HealthCard",
   },
   description:
     "Assess your family's health habits across 9 lifestyle areas and build an improvement plan.",
-  applicationName: "NSI Family Health Scorecard",
+  applicationName: "HealthCard by Growith NSI",
 };
 
 export const viewport: Viewport = {

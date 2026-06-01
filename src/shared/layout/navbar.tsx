@@ -40,14 +40,14 @@ export function Navbar({
         type="button"
         onClick={onOpenMobile}
         aria-label="Open navigation menu"
-        className="inline-flex size-10 items-center justify-center rounded-[var(--radius-md)] text-[var(--text-secondary)] outline-none transition-colors hover:bg-[var(--muted)] hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] lg:hidden"
+        className="inline-flex size-10 items-center justify-center rounded-[var(--radius-md)] text-[var(--text-secondary)] outline-none transition-colors hover:bg-[var(--muted)] hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
       >
         <Menu className="size-5" aria-hidden="true" />
       </button>
 
       <Link
         href={homeHref}
-        aria-label="NSI Health home"
+        aria-label="HealthCard home"
         className="rounded-[var(--radius-sm)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
       >
         <Logo />
