@@ -11,7 +11,7 @@ interface LogoProps {
 /** HealthCard (by Growith NSI) brand mark. Presentational only. */
 export function Logo({ showText = true, className, size = 38 }: LogoProps) {
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
+    <span className={cn("inline-flex items-center gap-3", className)}>
       <Image
         src="/logo-mark.png"
         alt="HealthCard"
@@ -23,11 +23,11 @@ export function Logo({ showText = true, className, size = 38 }: LogoProps) {
         style={{ width: size, height: size }}
       />
       {showText && (
-        <span className="flex flex-col leading-none">
-          <span className="font-heading text-[15px] font-bold tracking-tight text-[var(--text-primary)]">
+        <span className="flex flex-col gap-1 leading-tight">
+          <span className="font-heading text-[15px] font-bold leading-none tracking-tight text-[var(--text-primary)]">
             HealthCard
           </span>
-          <span className="text-[11px] font-medium text-[var(--text-muted)]">
+          <span className="text-[11px] font-medium leading-none tracking-wide text-[var(--text-muted)]">
             by Growith NSI
           </span>
         </span>
