@@ -27,6 +27,7 @@ export function LoginContainer() {
     resolver: zodResolver(loginSchema),
     defaultValues: { mobile: "", password: "" },
   });
+  const mobileField = form.register("mobile");
 
   const onSubmit = async (values: LoginInput) => {
     setFormError(null);
@@ -93,9 +94,14 @@ export function LoginContainer() {
           type="tel"
           inputMode="numeric"
           autoComplete="tel"
+          maxLength={10}
           prefix={<Smartphone className="size-4" />}
-          placeholder="9876543210"
-          {...form.register("mobile")}
+          placeholder="98XXXXXXXX"
+          {...mobileField}
+          onChange={(e) => {
+            e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
+            mobileField.onChange(e);
+          }}
           error={form.formState.errors.mobile?.message}
         />
         <Input

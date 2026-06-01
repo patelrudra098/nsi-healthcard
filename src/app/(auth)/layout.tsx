@@ -1,6 +1,7 @@
 "use client";
 
-import { HeartPulse, ShieldCheck, Sparkles, Users } from "lucide-react";
+import Image from "next/image";
+import { ShieldCheck, Sparkles, Users } from "lucide-react";
 import { PublicOnlyRoute } from "@/features/auth";
 
 const PROMISES = [
@@ -50,16 +51,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           />
 
           <div className="relative flex items-center gap-3">
-            <span
-              className="inline-flex size-11 items-center justify-center rounded-[var(--radius-md)]"
-              style={{ backgroundColor: "rgba(255,255,255,0.14)" }}
-            >
-              <HeartPulse
-                className="size-6"
-                style={{ color: "var(--text-inverse)" }}
-                aria-hidden="true"
-              />
-            </span>
+            <Image
+              src="/Cropped_Square_Image.png"
+              alt="NSI Health"
+              width={44}
+              height={44}
+              priority
+              sizes="44px"
+              className="size-11 shrink-0 rounded-full bg-white object-cover ring-1 ring-white/30"
+            />
             <div className="flex flex-col leading-tight">
               <span
                 className="font-heading text-lg font-bold"
