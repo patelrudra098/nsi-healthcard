@@ -285,18 +285,10 @@ export function SectionContainer() {
           </DialogHeader>
           <DialogBody>
             <p className="text-sm text-[var(--text-muted)]">
-              Add the bonus section on family health culture for a fuller picture,
-              or skip straight to your results.
+              Add the bonus section on family health culture for a fuller picture.
             </p>
           </DialogBody>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={runComplete}
-              isLoading={complete.isPending}
-            >
-              Skip &amp; see results
-            </Button>
             <Button
               onClick={() => {
                 setBonusOpen(false);
