@@ -2,6 +2,8 @@ import axios from "axios";
 import { http, unwrap } from "@/services";
 import type {
   ActiveAssessment,
+  AssessmentAnswers,
+  AssessmentHistoryEntry,
   AssessmentResult,
   FamilyProfile,
   ImprovementPlan,
@@ -28,8 +30,32 @@ export interface ImprovementPlanBody {
 }
 
 export const assessmentApi = {
-  getQuestions: async (signal?: AbortSignal): Promise<QuestionsResponse> =>
-    unwrap(await http.get("/assessment/questions", { signal })),
+  /** Questions come pre-translated by the backend when a `lang` is supplied. */
+  getQuestions: async (
+    lang?: string,
+    signal?: AbortSignal,
+  ): Promise<QuestionsResponse> =>
+    unwrap(
+      await http.get(
+        `/assessment/questions${lang ? `?lang=${encodeURIComponent(lang)}` : ""}`,
+        { signal },
+      ),
+    ),
+
+  getHistory: async (
+    signal?: AbortSignal,
+  ): Promise<AssessmentHistoryEntry[]> => {
+    const data = unwrap<AssessmentHistoryEntry[]>(
+      await http.get("/assessment/history", { signal }),
+    );
+    return Array.isArray(data) ? data : [];
+  },
+
+  getAnswers: async (
+    id: string,
+    signal?: AbortSignal,
+  ): Promise<AssessmentAnswers> =>
+    unwrap(await http.get(`/assessment/${id}/answers`, { signal })),
 
   getActive: async (signal?: AbortSignal): Promise<ActiveAssessment | null> => {
     const data = unwrap<ActiveResponse>(

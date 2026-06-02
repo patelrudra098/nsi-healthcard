@@ -9,6 +9,7 @@ import {
   SECTION_ORDER,
   type SectionKey,
 } from "@/config/constants";
+import { useLanguage } from "@/lib/hooks/use-language";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -40,6 +41,7 @@ export function SectionContainer() {
   const router = useRouter();
 
   const questionsQuery = useQuestions();
+  const { speechCode } = useLanguage();
   const { assessmentId, isResolving, isMissing } = useResolveAssessmentId();
   const saveSection = useSaveSection();
   const complete = useCompleteAssessment();
@@ -227,6 +229,7 @@ export function SectionContainer() {
                   }))
                 }
                 invalid={showInvalid && answers[question.questionKey] == null}
+                speechCode={speechCode}
               />
             </div>
           ))}

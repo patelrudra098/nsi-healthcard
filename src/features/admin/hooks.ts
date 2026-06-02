@@ -11,6 +11,7 @@ import { notifyError } from "@/lib/notify";
 import { adminApi } from "./api";
 import type {
   AdminAssessmentsQuery,
+  AdminHabitPlansQuery,
   AdminUserInput,
   AdminUsersQuery,
 } from "./types";
@@ -73,6 +74,22 @@ export function useAdminAssessment(id: string) {
   return useQuery({
     queryKey: QUERY_KEYS.adminAssessment(id),
     queryFn: ({ signal }) => adminApi.getAssessment(id, signal),
+    enabled: Boolean(id),
+  });
+}
+
+export function useAdminHabitPlans(query: AdminHabitPlansQuery) {
+  return useQuery({
+    queryKey: QUERY_KEYS.adminHabitPlans({ ...query }),
+    queryFn: ({ signal }) => adminApi.getHabitPlans(query, signal),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useAdminHabitPlan(id: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.adminHabitPlan(id),
+    queryFn: ({ signal }) => adminApi.getHabitPlan(id, signal),
     enabled: Boolean(id),
   });
 }

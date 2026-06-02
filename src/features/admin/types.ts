@@ -14,6 +14,12 @@ export interface AdminAssessmentsQuery {
   status: "IN_PROGRESS" | "COMPLETED" | "";
 }
 
+export interface AdminHabitPlansQuery {
+  page: number;
+  limit: number;
+  status: "ACTIVE" | "COMPLETED" | "ABANDONED" | "";
+}
+
 export const adminUserSchema = z.object({
   name: z
     .string()

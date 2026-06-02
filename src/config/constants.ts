@@ -100,6 +100,8 @@ export const STORAGE_KEYS = {
   accessToken: "nsi_access_token",
   user: "nsi_user",
   assessmentFlow: "nsi_assessment_flow",
+  preferredLanguage: "nsi_preferred_language",
+  voiceGender: "nsi_voice_gender",
 } as const;
 
 export const ROUTES = {
@@ -113,11 +115,15 @@ export const ROUTES = {
   assessmentResult: "/assessment/result",
   improvementPlan: "/improvement-plan",
   dashboard: "/dashboard",
+  history: "/history",
+  historyDetail: (id: string) => `/history/${id}`,
   admin: "/admin",
   adminUsers: "/admin/users",
   adminUser: (id: string) => `/admin/users/${id}`,
   adminAssessments: "/admin/assessments",
   adminAssessment: (id: string) => `/admin/assessments/${id}`,
+  adminHabitPlans: "/admin/habit-plans",
+  adminHabitPlan: (id: string) => `/admin/habit-plans/${id}`,
 } as const;
 
 export const QUERY_KEYS = {
@@ -125,8 +131,16 @@ export const QUERY_KEYS = {
   activeAssessment: ["assessment", "active"] as const,
   assessment: (id: string) => ["assessment", id] as const,
   assessmentResult: (id: string) => ["assessment", id, "result"] as const,
+  assessmentHistory: ["assessment", "history"] as const,
+  assessmentAnswers: (id: string) => ["assessment", id, "answers"] as const,
   dashboard: ["dashboard"] as const,
+  habitPlanActive: ["habit-plan", "active"] as const,
+  habitPlanScoreHistory: ["habit-plan", "score-history"] as const,
+  habitPlanHistory: ["habit-plan", "history"] as const,
   adminStats: ["admin", "stats"] as const,
+  adminHabitPlans: (params: Record<string, unknown>) =>
+    ["admin", "habit-plans", params] as const,
+  adminHabitPlan: (id: string) => ["admin", "habit-plans", id] as const,
   adminUsers: (params: Record<string, unknown>) =>
     ["admin", "users", params] as const,
   adminUser: (id: string) => ["admin", "users", id] as const,

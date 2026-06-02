@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ClipboardList,
   ClipboardPlus,
   History,
+  LineChart as LineChartIcon,
   PlayCircle,
   Plus,
   Sparkles,
@@ -13,7 +14,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { ROUTES } from "@/config/constants";
-import type { AssessmentResult, ScoreBandKey } from "@/lib/types";
+import type { ScoreBandKey, ScoreHistoryEntry } from "@/lib/types";
 import { formatDate } from "@/lib/format";
 import { Button } from "@/shared/ui/button";
 import {
@@ -22,31 +23,78 @@ import {
   ErrorState,
   LoadingState,
   PageHeader,
-  PlanSummary,
   ScoreRing,
   SectionBreakdown,
   StatCard,
 } from "@/shared/components";
-import { assessmentApi, useAssessmentStore } from "@/features/assessment";
+import {
+  assessmentApi,
+  useAssessmentResult,
+  useAssessmentStore,
+} from "@/features/assessment";
+import {
+  CheckInSheet,
+  HabitTrackerWidget,
+  ProgressComparison,
+  ReassessBanner,
+  ScoreHistoryChart,
+  useActiveHabitPlan,
+  useScoreHistory,
+} from "@/features/habit-plan";
 import { useDashboard } from "../hooks";
 
 export function DashboardContainer() {
   const router = useRouter();
   const dashboard = useDashboard();
+  const planQuery = useActiveHabitPlan();
+  const scoreHistoryQuery = useScoreHistory();
   const setAssessmentId = useAssessmentStore((s) => s.setAssessmentId);
-  const setResult = useAssessmentStore((s) => s.setResult);
   const [resuming, setResuming] = useState(false);
+  const [checkInOpen, setCheckInOpen] = useState(false);
+
+  const data = dashboard.data;
+  const history = useMemo(
+    () => data?.assessmentHistory ?? [],
+    [data?.assessmentHistory],
+  );
+
+  // Oldest completed assessment — used for the section-by-section "most improved".
+  const earliestId = useMemo(() => {
+    if (history.length < 2) return null;
+    const sorted = [...history].sort(
+      (a, b) =>
+        new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime(),
+    );
+    const earliest = sorted[0];
+    return earliest.assessmentId === data?.latestAssessment?.assessmentId
+      ? null
+      : earliest.assessmentId;
+  }, [history, data?.latestAssessment?.assessmentId]);
+
+  const firstResultQuery = useAssessmentResult(earliestId);
+
+  // Prefer the dedicated score-history endpoint; fall back to assessment history
+  // so the chart still renders if the endpoint is empty or unavailable.
+  const scoreData: ScoreHistoryEntry[] = useMemo(() => {
+    const fromApi = scoreHistoryQuery.data ?? [];
+    if (fromApi.length > 0) return fromApi;
+    return history.map((item) => ({
+      completedAt: item.completedAt,
+      scorePercentage: item.scorePercentage,
+      bandLabel: item.bandLabel,
+      scoreBand: item.scoreBand as ScoreBandKey,
+    }));
+  }, [scoreHistoryQuery.data, history]);
 
   if (dashboard.isLoading) return <LoadingState label="Loading your dashboard…" />;
   if (dashboard.isError) {
     return <ErrorState error={dashboard.error} onRetry={() => dashboard.refetch()} />;
   }
-
-  const data = dashboard.data;
   if (!data) return <ErrorState />;
 
   const { user, latestAssessment, assessmentHistory, stats } = data;
   const firstName = user.name.split(" ")[0];
+  const plan = planQuery.data ?? null;
 
   const handleResume = async () => {
     setResuming(true);
@@ -66,12 +114,6 @@ export function DashboardContainer() {
     } finally {
       setResuming(false);
     }
-  };
-
-  const openPlan = (assessment: AssessmentResult) => {
-    setAssessmentId(assessment.assessmentId);
-    setResult(assessment);
-    router.push(ROUTES.improvementPlan);
   };
 
   // ── Empty state: no completed assessment yet ──────────────────────────
@@ -117,11 +159,19 @@ export function DashboardContainer() {
 
   return (
     <div className="space-y-6">
+      {plan?.shouldReassess && (
+        <ReassessBanner message={plan.encouragementMessage} />
+      )}
+
       <PageHeader
         title={`Hello, ${firstName}`}
-        description="Here's your family's latest health snapshot."
+        description="Here's your family's latest health snapshot and your 21-day challenge."
         actions={
           <>
+            <Button variant="outline" onClick={() => router.push(ROUTES.history)}>
+              <History className="size-4" aria-hidden="true" />
+              Health history
+            </Button>
             {stats.hasActiveAssessment && (
               <Button variant="outline" onClick={handleResume} isLoading={resuming}>
                 <PlayCircle className="size-4" aria-hidden="true" />
@@ -150,7 +200,7 @@ export function DashboardContainer() {
           </div>
         </section>
 
-        <div className="grid grid-cols-2 gap-4 lg:col-span-2 lg:grid-cols-2 lg:content-start">
+        <div className="grid grid-cols-2 gap-4 lg:col-span-2 lg:content-start">
           <StatCard
             label="Completed assessments"
             value={stats.totalCompletedAssessments}
@@ -165,11 +215,7 @@ export function DashboardContainer() {
           />
           <StatCard
             label="Score trend"
-            value={
-              trend == null
-                ? "—"
-                : `${trend > 0 ? "+" : ""}${trend}%`
-            }
+            value={trend == null ? "—" : `${trend > 0 ? "+" : ""}${trend}%`}
             hint={
               trend == null
                 ? "First assessment"
@@ -191,6 +237,22 @@ export function DashboardContainer() {
         </div>
       </div>
 
+      <div className="grid gap-5 lg:grid-cols-3">
+        <section className="app-card space-y-5 p-6 lg:col-span-2">
+          <div className="flex items-center gap-2">
+            <LineChartIcon className="size-5 text-[var(--text-muted)]" aria-hidden="true" />
+            <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
+              Score history
+            </h2>
+          </div>
+          <ScoreHistoryChart data={scoreData} />
+        </section>
+
+        <div className="lg:col-span-1">
+          <HabitTrackerWidget plan={plan} onCheckIn={() => setCheckInOpen(true)} />
+        </div>
+      </div>
+
       <section className="app-card space-y-5 p-6">
         <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
           Section breakdown
@@ -201,35 +263,29 @@ export function DashboardContainer() {
         />
       </section>
 
-      <section className="app-card space-y-5 p-6">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
-            Improvement plan
-          </h2>
-          {!latest.improvementPlan && (
-            <Button variant="outline" size="sm" onClick={() => openPlan(latest)}>
-              <Plus className="size-4" aria-hidden="true" />
-              Add plan
-            </Button>
-          )}
-        </div>
-        {latest.improvementPlan ? (
-          <PlanSummary plan={latest.improvementPlan} />
-        ) : (
-          <p className="text-sm text-[var(--text-muted)]">
-            You haven&apos;t written an improvement plan for this assessment yet.
-            Capture one habit to start improving today.
-          </p>
-        )}
-      </section>
+      {firstResultQuery.data && (
+        <ProgressComparison
+          first={firstResultQuery.data.sectionScores}
+          latest={latest.sectionScores}
+        />
+      )}
 
       {assessmentHistory.length > 1 && (
         <section className="app-card space-y-4 p-6">
-          <div className="flex items-center gap-2">
-            <History className="size-5 text-[var(--text-muted)]" aria-hidden="true" />
-            <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
-              Assessment history
-            </h2>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <History className="size-5 text-[var(--text-muted)]" aria-hidden="true" />
+              <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
+                Assessment history
+              </h2>
+            </div>
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() => router.push(ROUTES.history)}
+            >
+              View all
+            </Button>
           </div>
           <ul className="divide-y divide-[var(--border)]">
             {assessmentHistory.map((item) => (
@@ -254,6 +310,15 @@ export function DashboardContainer() {
             ))}
           </ul>
         </section>
+      )}
+
+      {plan && (
+        <CheckInSheet
+          open={checkInOpen}
+          onOpenChange={setCheckInOpen}
+          plan={plan}
+          onComplete={() => router.push(ROUTES.improvementPlan)}
+        />
       )}
     </div>
   );

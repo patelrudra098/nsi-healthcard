@@ -3,7 +3,9 @@
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
 
-const SCORE_META = [
+/** Token-based colour ramp for the 1–5 score scale. Single source of truth,
+ *  reused by the descriptive option list. */
+export const SCORE_META = [
   { value: 1, label: "Poor", color: "var(--error)", soft: "var(--error-soft)" },
   { value: 2, label: "Weak", color: "var(--cat-amber)", soft: "var(--cat-amber-soft)" },
   { value: 3, label: "Average", color: "var(--warning)", soft: "var(--warning-soft)" },

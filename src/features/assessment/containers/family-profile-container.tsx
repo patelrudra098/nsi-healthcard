@@ -2,12 +2,15 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Info } from "lucide-react";
+import { ArrowRight, Info, User } from "lucide-react";
 import { ROUTES } from "@/config/constants";
 import type { FamilyProfile } from "@/lib/types";
 import { notifySuccess } from "@/lib/notify";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/features/auth";
+import { useLanguage } from "@/lib/hooks/use-language";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Switch } from "@/shared/ui/switch";
@@ -20,10 +23,84 @@ import {
 } from "@/shared/ui/select";
 import { FlowShell } from "@/shared/layout";
 import { LoadingState } from "@/shared/components";
+import { LanguageSelector } from "../components/language-selector";
 import { useResolveAssessmentId, useSaveFamilyProfile } from "../hooks";
 import { familyProfileSchema, type FamilyProfileInput } from "../types";
 
 const SLEEP_ROUTE = ROUTES.assessmentSection("SLEEP");
+
+const MARITAL_OPTIONS = [
+  { value: "MARRIED", label: "Married" },
+  { value: "SINGLE", label: "Single" },
+] as const;
+
+const COOK_OPTIONS = [
+  "Myself",
+  "Spouse / Partner",
+  "Parent (Mother / Father)",
+  "In-laws",
+  "Domestic help / Cook",
+  "We all share / Take turns",
+  "Mostly outside / Delivery",
+  "Other",
+] as const;
+
+const HEALTH_DECISION_OPTIONS = [
+  "Myself",
+  "Spouse / Partner",
+  "Both of us together",
+  "Parent / Elder",
+  "Whole family together",
+  "Other",
+] as const;
+
+/** Field names that are rendered as a dropdown. */
+type SelectName = "maritalStatus" | "primaryCook" | "healthDecisionMaker";
+
+function SelectField({
+  control,
+  name,
+  label,
+  placeholder,
+  options,
+  error,
+  className,
+}: {
+  control: Control<FamilyProfileInput>;
+  name: SelectName;
+  label: string;
+  placeholder: string;
+  options: ReadonlyArray<{ value: string; label: string }>;
+  error?: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex w-full flex-col gap-1.5", className)}>
+      <label className="text-sm font-medium text-[var(--foreground)]">{label}</label>
+      <Controller
+        control={control}
+        name={name}
+        render={({ field }) => (
+          <Select value={field.value || undefined} onValueChange={field.onChange}>
+            <SelectTrigger aria-invalid={Boolean(error)}>
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      />
+      {error && (
+        <p className="text-xs font-medium text-[var(--destructive)]">{error}</p>
+      )}
+    </div>
+  );
+}
 
 function ToggleField({
   label,
@@ -51,8 +128,13 @@ function ToggleField({
   );
 }
 
+const toText = (asString: ReadonlyArray<string>) =>
+  asString.map((value) => ({ value, label: value }));
+
 export function FamilyProfileContainer() {
   const router = useRouter();
+  const { user } = useAuth();
+  const { language } = useLanguage();
   const { assessmentId, isResolving, isMissing } = useResolveAssessmentId();
   const saveProfile = useSaveFamilyProfile();
 
@@ -98,6 +180,7 @@ export function FamilyProfileContainer() {
       hasHealthCondition: values.hasHealthCondition,
       primaryCook: values.primaryCook?.trim() || undefined,
       healthDecisionMaker: values.healthDecisionMaker?.trim() || undefined,
+      preferredLanguage: language,
     };
 
     saveProfile.mutate(
@@ -132,8 +215,22 @@ export function FamilyProfileContainer() {
           </p>
         </div>
 
-        <div className="app-card space-y-5 p-6">
+        <div className="app-card space-y-6 p-6">
+          {/* Preferred language — drives read-aloud across the assessment. */}
+          <LanguageSelector />
+
+          <div className="h-px bg-[var(--border)]" aria-hidden="true" />
+
           <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              label="Name"
+              value={user?.name ?? ""}
+              prefix={<User className="size-4" />}
+              helper="From your account"
+              readOnly
+              disabled
+              wrapperClassName="sm:col-span-2"
+            />
             <Input label="City" placeholder="e.g. Mumbai" {...form.register("city")} error={form.formState.errors.city?.message} />
             <Input label="State" placeholder="e.g. Maharashtra" {...form.register("state")} error={form.formState.errors.state?.message} />
             <Input
@@ -146,34 +243,14 @@ export function FamilyProfileContainer() {
               {...form.register("age")}
               error={form.formState.errors.age?.message}
             />
-            <div className="flex w-full flex-col gap-1.5">
-              <label className="text-sm font-medium text-[var(--foreground)]">
-                Marital status
-              </label>
-              <Controller
-                control={form.control}
-                name="maritalStatus"
-                render={({ field }) => (
-                  <Select
-                    value={field.value || undefined}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MARRIED">Married</SelectItem>
-                      <SelectItem value="SINGLE">Single</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {form.formState.errors.maritalStatus && (
-                <p className="text-xs font-medium text-[var(--destructive)]">
-                  {form.formState.errors.maritalStatus.message}
-                </p>
-              )}
-            </div>
+            <SelectField
+              control={form.control}
+              name="maritalStatus"
+              label="Marital status"
+              placeholder="Select"
+              options={MARITAL_OPTIONS}
+              error={form.formState.errors.maritalStatus?.message}
+            />
             <Input
               label="Number of family members"
               type="number"
@@ -184,13 +261,22 @@ export function FamilyProfileContainer() {
               {...form.register("familyMemberCount")}
               error={form.formState.errors.familyMemberCount?.message}
             />
-            <Input label="Who cooks most meals?" placeholder="e.g. Mother" {...form.register("primaryCook")} error={form.formState.errors.primaryCook?.message} />
-            <Input
+            <SelectField
+              control={form.control}
+              name="primaryCook"
+              label="Who cooks most meals?"
+              placeholder="Select"
+              options={toText(COOK_OPTIONS)}
+              error={form.formState.errors.primaryCook?.message}
+            />
+            <SelectField
+              control={form.control}
+              name="healthDecisionMaker"
               label="Who takes health decisions?"
-              placeholder="e.g. Self"
-              wrapperClassName="sm:col-span-2"
-              {...form.register("healthDecisionMaker")}
+              placeholder="Select"
+              options={toText(HEALTH_DECISION_OPTIONS)}
               error={form.formState.errors.healthDecisionMaker?.message}
+              className="sm:col-span-2"
             />
           </div>
 

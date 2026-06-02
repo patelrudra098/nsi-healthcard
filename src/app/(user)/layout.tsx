@@ -1,12 +1,13 @@
 "use client";
 
-import { ClipboardPlus, LayoutDashboard } from "lucide-react";
+import { ClipboardPlus, History, LayoutDashboard } from "lucide-react";
 import { ROUTES } from "@/config/constants";
 import { ProtectedRoute, useAuth, useLogout } from "@/features/auth";
 import { AppShell, type NavItem } from "@/shared/layout";
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard, exact: true },
+  { label: "Health history", href: ROUTES.history, icon: History },
   { label: "New assessment", href: ROUTES.welcome, icon: ClipboardPlus },
 ];
 

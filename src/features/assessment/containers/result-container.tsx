@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
-import { ArrowRight, Sparkles, Target } from "lucide-react";
+import { Sparkles, Target } from "lucide-react";
 import { ROUTES } from "@/config/constants";
 import type { ScoreBandKey } from "@/lib/types";
 import { formatDate } from "@/lib/format";
@@ -16,6 +16,13 @@ import {
   ScoreRing,
   SectionBreakdown,
 } from "@/shared/components";
+import {
+  ChallengeReadyCard,
+  primaryHabit,
+  useActiveHabitPlan,
+  useGenerateHabitPlan,
+  useScoreHistory,
+} from "@/features/habit-plan";
 import {
   useAssessmentResult,
   useResolveAssessmentId,
@@ -30,10 +37,24 @@ export function ResultContainer() {
   const resultQuery = useAssessmentResult(storeResult ? null : assessmentId);
   const result = storeResult ?? resultQuery.data ?? null;
   const celebrated = useRef(false);
+  const generatePlan = useGenerateHabitPlan();
+  const generationStarted = useRef(false);
+
+  const planQuery = useActiveHabitPlan();
+  const scoreHistoryQuery = useScoreHistory();
 
   useEffect(() => {
     if (isMissing && !storeResult) router.replace(ROUTES.dashboard);
   }, [isMissing, storeResult, router]);
+
+  // Kick off 21-day plan generation silently once the result is available.
+  // The endpoint is idempotent, so failures (e.g. plan already exists) are ignored.
+  useEffect(() => {
+    const id = result?.assessmentId;
+    if (!id || generationStarted.current) return;
+    generationStarted.current = true;
+    generatePlan.mutate(id);
+  }, [result?.assessmentId, generatePlan]);
 
   useEffect(() => {
     if (!result || celebrated.current) return;
@@ -50,6 +71,19 @@ export function ResultContainer() {
     fire(0.3);
     setTimeout(() => fire(0.7), 180);
   }, [result]);
+
+  // Returning users (more than one completed assessment) see their improvement.
+  const improvement = useMemo(() => {
+    const history = [...(scoreHistoryQuery.data ?? [])].sort(
+      (a, b) =>
+        new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime(),
+    );
+    if (history.length < 2 || !result) return null;
+    return {
+      from: Math.round(history[history.length - 2].scorePercentage),
+      to: Math.round(result.scorePercentage),
+    };
+  }, [scoreHistoryQuery.data, result]);
 
   if (isResolving || (assessmentId && !storeResult && resultQuery.isLoading)) {
     return (
@@ -79,6 +113,9 @@ export function ResultContainer() {
   }
 
   const band = result.scoreBand as ScoreBandKey;
+  const plan = planQuery.data ?? null;
+  const focusHabit = plan ? primaryHabit(plan) : null;
+  const planLoading = generatePlan.isPending || planQuery.isLoading;
 
   return (
     <FlowShell exitHref={ROUTES.dashboard} width="wide">
@@ -103,7 +140,14 @@ export function ResultContainer() {
           </div>
         </section>
 
-        {result.weakestSection && (
+        {/* The hero: hand the user their fresh 21-day round. */}
+        <ChallengeReadyCard
+          habit={focusHabit}
+          loading={planLoading}
+          improvement={improvement}
+        />
+
+        {!improvement && result.weakestSection && (
           <div
             className="flex items-start gap-3 rounded-[var(--radius-lg)] border px-4 py-3.5"
             style={{
@@ -117,7 +161,7 @@ export function ResultContainer() {
                 Your weakest area:
               </span>{" "}
               {result.weakestSection.label} ({result.weakestSection.sectionPercent}%).
-              A great place to focus your improvement plan.
+              This is where your first 21 days will focus.
             </p>
           </div>
         )}
@@ -132,15 +176,7 @@ export function ResultContainer() {
           />
         </section>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button
-            size="lg"
-            onClick={() => router.push(ROUTES.improvementPlan)}
-            className="sm:min-w-[16rem]"
-          >
-            Create my improvement plan
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Button>
+        <div className="flex justify-center">
           <Button
             size="lg"
             variant="outline"

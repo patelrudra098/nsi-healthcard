@@ -9,17 +9,38 @@ import {
 import { QUERY_KEYS } from "@/config/constants";
 import type { FamilyProfile } from "@/lib/types";
 import { notifyError } from "@/lib/notify";
-import { assessmentApi, type ImprovementPlanBody } from "./api";
+import { useLanguage } from "@/lib/hooks/use-language";
+import { assessmentApi } from "./api";
 import { useAssessmentStore } from "./store";
 import type { SectionAnswer } from "./types";
 
-/** Public questions metadata — fetched once, cached for the session. */
+/**
+ * Questions for the chosen language. Keyed by language so switching refetches
+ * the translated set; the backend returns text, hints, and examples already
+ * translated.
+ */
 export function useQuestions() {
+  const { language } = useLanguage();
   return useQuery({
-    queryKey: QUERY_KEYS.questions,
-    queryFn: ({ signal }) => assessmentApi.getQuestions(signal),
+    queryKey: [...QUERY_KEYS.questions, language],
+    queryFn: ({ signal }) => assessmentApi.getQuestions(language, signal),
     staleTime: Infinity,
     gcTime: Infinity,
+  });
+}
+
+export function useAssessmentHistory() {
+  return useQuery({
+    queryKey: QUERY_KEYS.assessmentHistory,
+    queryFn: ({ signal }) => assessmentApi.getHistory(signal),
+  });
+}
+
+export function useAssessmentAnswers(id: string | null) {
+  return useQuery({
+    queryKey: QUERY_KEYS.assessmentAnswers(id ?? "none"),
+    queryFn: ({ signal }) => assessmentApi.getAnswers(id as string, signal),
+    enabled: Boolean(id),
   });
 }
 
@@ -114,23 +135,6 @@ export function useCompleteAssessment() {
       setResult(result);
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.dashboard });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.activeAssessment });
-    },
-    onError: (error) => notifyError(error),
-  });
-}
-
-export function useSaveImprovementPlan() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      assessmentId,
-      body,
-    }: {
-      assessmentId: string;
-      body: ImprovementPlanBody;
-    }) => assessmentApi.saveImprovementPlan(assessmentId, body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.dashboard });
     },
     onError: (error) => notifyError(error),
   });
