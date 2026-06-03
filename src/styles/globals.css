@@ -506,6 +506,31 @@
   }
 }
 
+/* ================= FORM ATTENTION PULSE ================= */
+/* One-shot ring used to draw the eye to a field/question the user skipped —
+   e.g. the first unanswered question when they try to advance. Restarted from
+   JS via remove → reflow → add so it can replay on repeated attempts. */
+
+@keyframes attention-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--destructive) 45%, transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+.animate-attention {
+  animation: attention-pulse 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-attention {
+    animation: none;
+  }
+}
+
 /* ================= SIDEBAR SUBMENU ================= */
 /* Smooth expand/collapse — replaces glitchy CSS Grid 0fr/1fr */
 

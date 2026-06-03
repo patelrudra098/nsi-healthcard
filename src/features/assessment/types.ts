@@ -24,17 +24,6 @@ const requiredNumberString = (
       rangeMessage,
     );
 
-/** Optional whole-number field — empty passes; any value must sit within range. */
-const optionalNumberString = (min: number, max: number, rangeMessage: string) =>
-  z
-    .string()
-    .trim()
-    .refine(
-      (value) =>
-        value === "" ||
-        (/^\d+$/.test(value) && Number(value) >= min && Number(value) <= max),
-      rangeMessage,
-    );
 
 export const familyProfileSchema = z.object({
   city: requiredText(120, "City is required"),
@@ -52,8 +41,18 @@ export const familyProfileSchema = z.object({
   hasHealthCondition: z.boolean().optional(),
   primaryCook: requiredText(120, "Tell us who cooks most meals"),
   healthDecisionMaker: requiredText(120, "Tell us who takes health decisions"),
-  heightCm: optionalNumberString(100, 250, "Height must be between 100 and 250 cm"),
-  weightKg: optionalNumberString(20, 300, "Weight must be between 20 and 300 kg"),
+  heightCm: requiredNumberString(
+    100,
+    250,
+    "Height is required",
+    "Height must be between 100 and 250 cm",
+  ),
+  weightKg: requiredNumberString(
+    20,
+    300,
+    "Weight is required",
+    "Weight must be between 20 and 300 kg",
+  ),
 });
 
 export type FamilyProfileInput = z.infer<typeof familyProfileSchema>;

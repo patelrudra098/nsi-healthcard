@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Sparkles, Trophy } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Sparkles, Trophy } from "lucide-react";
 import {
   ROUTES,
   SECTION_LABELS,
@@ -117,6 +117,7 @@ export function SectionContainer() {
     (q) => answers[q.questionKey] != null,
   ).length;
   const allAnswered = answeredCount === section.questions.length;
+  const unansweredCount = section.questions.length - answeredCount;
   const flowProgress = ((section.order - 1) / totalSections) * 100;
   const isCulture = sectionKey === "CULTURE";
 
@@ -146,6 +147,21 @@ export function SectionContainer() {
     });
   };
 
+  // Jump to (and visibly flag) the first unanswered question. Centres it, moves
+  // focus there for keyboard/SR users, and replays an attention pulse — even if
+  // the same card is targeted twice in a row.
+  const goToFirstUnanswered = () => {
+    const first = section.questions.find((q) => answers[q.questionKey] == null);
+    if (!first) return;
+    const el = document.getElementById(`question-${first.questionKey}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus({ preventScroll: true });
+    el.classList.remove("animate-attention");
+    void el.offsetWidth; // force reflow so the animation restarts
+    el.classList.add("animate-attention");
+  };
+
   const handleNext = () => {
     if (!allAnswered) {
       setInvalidShownFor((prev) => {
@@ -154,14 +170,7 @@ export function SectionContainer() {
         next.add(sectionKey);
         return next;
       });
-      const firstUnanswered = section.questions.find(
-        (q) => answers[q.questionKey] == null,
-      );
-      if (firstUnanswered) {
-        document
-          .getElementById(`question-${firstUnanswered.questionKey}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+      goToFirstUnanswered();
       return;
     }
 
@@ -214,7 +223,12 @@ export function SectionContainer() {
 
         <div className="space-y-3">
           {section.questions.map((question, index) => (
-            <div key={question.questionKey} id={`question-${question.questionKey}`}>
+            <div
+              key={question.questionKey}
+              id={`question-${question.questionKey}`}
+              tabIndex={-1}
+              className="scroll-mt-24 rounded-[var(--radius-lg)] outline-none"
+            >
               <QuestionCard
                 question={question}
                 index={index}
@@ -236,9 +250,18 @@ export function SectionContainer() {
         </div>
 
         {showInvalid && !allAnswered && (
-          <p className="text-center text-sm font-medium text-[var(--destructive)]">
-            Please answer every question to continue.
-          </p>
+          <div className="flex justify-center" aria-live="polite">
+            <button
+              type="button"
+              onClick={goToFirstUnanswered}
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-3 py-2 text-sm font-medium text-[var(--destructive)] transition-colors duration-150 hover:bg-[var(--error-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+            >
+              <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+              {unansweredCount === 1
+                ? "1 question still needs an answer — tap to jump to it"
+                : `${unansweredCount} questions still need an answer — tap to jump to the first`}
+            </button>
+          </div>
         )}
 
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -256,7 +279,6 @@ export function SectionContainer() {
             size="lg"
             onClick={handleNext}
             isLoading={busy}
-            disabled={!allAnswered && showInvalid}
           >
             {isCulture ? "Finish & see results" : "Next section"}
             <ArrowRight className="size-4" aria-hidden="true" />
