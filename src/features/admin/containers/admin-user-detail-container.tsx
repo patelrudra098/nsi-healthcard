@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ChevronDown, Save } from "lucide-react";
+import { ArrowLeft, ChevronDown, Save, Sparkles } from "lucide-react";
 import { ROUTES } from "@/config/constants";
 import type { AssessmentResult, ScoreBandKey } from "@/lib/types";
 import { formatDate } from "@/lib/format";
@@ -145,16 +145,36 @@ export function AdminUserDetailContainer() {
           noValidate
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              label="Full name"
-              {...form.register("name")}
-              error={form.formState.errors.name?.message}
+            <Controller
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <Input
+                  label="Full name"
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                  error={form.formState.errors.name?.message}
+                />
+              )}
             />
-            <Input
-              label="Mobile number"
-              inputMode="numeric"
-              {...form.register("mobile")}
-              error={form.formState.errors.mobile?.message}
+            <Controller
+              control={form.control}
+              name="mobile"
+              render={({ field }) => (
+                <Input
+                  label="Mobile number"
+                  inputMode="numeric"
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                  error={form.formState.errors.mobile?.message}
+                />
+              )}
             />
             <div className="flex w-full flex-col gap-1.5">
               <label className="text-sm font-medium text-[var(--foreground)]">
@@ -211,6 +231,29 @@ export function AdminUserDetailContainer() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="app-card space-y-4 p-6">
+        <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
+          Habit challenge
+        </h2>
+        <div className="flex flex-col gap-4 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[var(--primary)]">
+              <Sparkles className="size-[18px]" aria-hidden="true" />
+            </span>
+            <p className="text-sm text-[var(--text-secondary)]">
+              View this member&apos;s 21-day habit challenge — progress, habits,
+              and weekly check-ins.
+            </p>
+          </div>
+          <Button variant="secondary" size="sm" asChild className="shrink-0">
+            <Link href={ROUTES.adminHabitPlans}>
+              Open habit plans
+              <ArrowLeft className="size-4 rotate-180" aria-hidden="true" />
+            </Link>
+          </Button>
+        </div>
       </section>
     </div>
   );

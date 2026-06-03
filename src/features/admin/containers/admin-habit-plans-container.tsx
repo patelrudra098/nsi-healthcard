@@ -76,7 +76,7 @@ export function AdminHabitPlansContainer() {
     <div className="space-y-6">
       <PageHeader
         title="Habit plans"
-        description="Every 90-day plan across the platform, with progress and check-in activity."
+        description="Every 21-day habit challenge across the platform, with progress and check-in activity."
       />
 
       <div className="flex flex-wrap gap-3">

@@ -8,6 +8,7 @@ import { ROUTES } from "@/config/constants";
 import type { ScoreBandKey } from "@/lib/types";
 import { formatDate } from "@/lib/format";
 import { notifySuccess } from "@/lib/notify";
+import { useAssessmentAnswers, useQuestions } from "@/features/assessment";
 import { Button } from "@/shared/ui/button";
 import {
   BandBadge,
@@ -20,6 +21,7 @@ import {
   ScoreRing,
   SectionBreakdown,
 } from "@/shared/components";
+import { QuestionAnswers } from "../components/question-answers";
 import { useAdminAssessment, useDeleteAssessment } from "../hooks";
 
 export function AdminAssessmentDetailContainer() {
@@ -27,6 +29,8 @@ export function AdminAssessmentDetailContainer() {
   const router = useRouter();
   const id = params.id ?? "";
   const query = useAdminAssessment(id);
+  const questionsQuery = useQuestions();
+  const answersQuery = useAssessmentAnswers(id);
   const deleteAssessment = useDeleteAssessment();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -131,6 +135,29 @@ export function AdminAssessmentDetailContainer() {
           <ProfileSummary profile={data.familyProfile} />
         </section>
       )}
+
+      <section className="app-card space-y-5 p-6">
+        <div>
+          <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
+            Question answers
+          </h2>
+          <p className="mt-0.5 text-sm text-[var(--text-muted)]">
+            Every answer this member gave, grouped by section.
+          </p>
+        </div>
+        {questionsQuery.isLoading || answersQuery.isLoading ? (
+          <p className="text-sm text-[var(--text-muted)]">Loading answers…</p>
+        ) : questionsQuery.data && answersQuery.data ? (
+          <QuestionAnswers
+            questions={questionsQuery.data}
+            answers={answersQuery.data.questionAnswers}
+          />
+        ) : (
+          <p className="text-sm text-[var(--text-muted)]">
+            Answers are unavailable for this assessment.
+          </p>
+        )}
+      </section>
 
       {data.improvementPlan && (
         <section className="app-card space-y-4 p-6">

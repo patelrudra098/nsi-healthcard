@@ -33,22 +33,22 @@ export function NavLink({ item, collapsed = false, onNavigate }: NavLinkProps) {
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium outline-none",
+        "group relative flex items-center rounded-[var(--radius-md)] text-sm font-medium outline-none",
         "transition-colors duration-150 [transition-timing-function:cubic-bezier(0,0,0.2,1)] motion-reduce:transition-none",
         "focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]",
-        collapsed && "justify-center px-0",
+        collapsed ? "mx-auto size-11 justify-center" : "gap-3 px-3 py-2.5",
         active
           ? "bg-[var(--primary-soft)] text-[var(--primary)]"
           : "text-[var(--text-secondary)] hover:bg-[var(--muted)] hover:text-[var(--text-primary)]",
       )}
     >
-      {active && (
+      {active && !collapsed && (
         <span
           className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[var(--primary)]"
           aria-hidden="true"
         />
       )}
-      <Icon className="size-[18px] shrink-0" aria-hidden="true" />
+      <Icon className="size-5 shrink-0" aria-hidden="true" />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </Link>
   );
