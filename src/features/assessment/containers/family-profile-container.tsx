@@ -24,6 +24,7 @@ import {
 } from "@/shared/ui/select";
 import { FlowShell } from "@/shared/layout";
 import { LoadingState } from "@/shared/components";
+import { CityStateFields } from "../components/city-state-fields";
 import { LanguageSelector } from "../components/language-selector";
 import { useResolveAssessmentId, useSaveFamilyProfile } from "../hooks";
 import { familyProfileSchema, type FamilyProfileInput } from "../types";
@@ -236,8 +237,7 @@ export function FamilyProfileContainer() {
               disabled
               wrapperClassName="sm:col-span-2"
             />
-            <Input label="City" placeholder="e.g. Mumbai" {...form.register("city")} error={form.formState.errors.city?.message} />
-            <Input label="State" placeholder="e.g. Maharashtra" {...form.register("state")} error={form.formState.errors.state?.message} />
+            <CityStateFields form={form} />
             <Input
               label="Age"
               type="number"
