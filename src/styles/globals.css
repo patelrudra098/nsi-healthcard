@@ -269,6 +269,22 @@
     --icon-neutral: var(--text-secondary);
     --icon-neutral-bg: var(--cat-neutral-soft);
 
+    /* ================= BMI SCALE ================= */
+    /* Five-stop health scale (under → normal → over → high → obese).
+       Maps the backend `colorKey` to a foreground + soft-background pair and
+       drives the dashboard BMI card's gradient track. Blue/green/red reuse the
+       semantic tokens; yellow/orange are tuned so all five steps stay distinct. */
+    --bmi-blue:        var(--cat-blue);
+    --bmi-blue-soft:   var(--cat-blue-soft);
+    --bmi-green:       var(--success);
+    --bmi-green-soft:  var(--success-soft);
+    --bmi-yellow:      #B5800A;
+    --bmi-yellow-soft: #FBF1D2;
+    --bmi-orange:      #C2410C;
+    --bmi-orange-soft: #FBE7DC;
+    --bmi-red:         var(--error);
+    --bmi-red-soft:    var(--error-soft);
+
     /* ================= NSI DOMAIN COLORS ================= */
     /* Distributor status colors — single source of truth used by StatusBadge & TreeCanvas */
     --status-sp-bg:     #FAEEDA;

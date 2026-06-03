@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Star } from "lucide-react";
 import { ROUTES } from "@/config/constants";
 import type { AdminHabitPlanSummary, HabitPlanStatus } from "@/lib/types";
 import { formatDate } from "@/lib/format";
+import { sectionLabel } from "@/features/habit-plan";
 import { Badge } from "@/shared/ui/badge";
 import {
   Select,
@@ -107,9 +108,9 @@ export function AdminHabitPlansContainer() {
             <TableHead>User</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Progress</TableHead>
-            <TableHead>Habits</TableHead>
+            <TableHead>Focus</TableHead>
             <TableHead>Check-ins</TableHead>
-            <TableHead>Last active</TableHead>
+            <TableHead>Last check-in</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -127,9 +128,9 @@ export function AdminHabitPlansContainer() {
               const meta = STATUS_META[plan.status];
               return (
                 <TableRow
-                  key={plan.id}
+                  key={plan.planId}
                   clickable
-                  onClick={() => router.push(ROUTES.adminHabitPlan(plan.id))}
+                  onClick={() => router.push(ROUTES.adminHabitPlan(plan.planId))}
                 >
                   <TableCell>
                     <TableCellText
@@ -147,18 +148,28 @@ export function AdminHabitPlansContainer() {
                   </TableCell>
                   <TableCell>
                     <span className="text-[var(--text-secondary)]">
-                      {plan.sectionKeys.length > 0
-                        ? plan.sectionKeys.join(", ")
+                      {plan.habits.length > 0
+                        ? plan.habits.map(sectionLabel).join(", ")
                         : "—"}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="tabular-nums text-[var(--text-secondary)]">
-                      {plan.checkInsCompleted}/{plan.totalWeeks} weeks
+                    <span className="inline-flex items-center gap-2 tabular-nums text-[var(--text-secondary)]">
+                      {plan.totalCheckIns} check-in
+                      {plan.totalCheckIns === 1 ? "" : "s"}
+                      {plan.avgRating != null && (
+                        <span className="inline-flex items-center gap-1 text-[var(--text-muted)]">
+                          <Star
+                            className="size-3.5 fill-[var(--cat-amber)] text-[var(--cat-amber)]"
+                            aria-hidden="true"
+                          />
+                          {plan.avgRating.toFixed(1)}
+                        </span>
+                      )}
                     </span>
                   </TableCell>
                   <TableCell>
-                    {plan.lastActiveAt ? formatDate(plan.lastActiveAt) : "—"}
+                    {plan.lastCheckIn ? formatDate(plan.lastCheckIn) : "—"}
                   </TableCell>
                 </TableRow>
               );

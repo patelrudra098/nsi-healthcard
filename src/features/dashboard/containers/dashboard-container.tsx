@@ -19,6 +19,7 @@ import { formatDate } from "@/lib/format";
 import { Button } from "@/shared/ui/button";
 import {
   BandBadge,
+  BmiCard,
   EmptyState,
   ErrorState,
   LoadingState,
@@ -92,7 +93,7 @@ export function DashboardContainer() {
   }
   if (!data) return <ErrorState />;
 
-  const { user, latestAssessment, assessmentHistory, stats } = data;
+  const { user, latestAssessment, assessmentHistory, stats, bmi } = data;
   const firstName = user.name.split(" ")[0];
   const plan = planQuery.data ?? null;
 
@@ -236,6 +237,8 @@ export function DashboardContainer() {
           />
         </div>
       </div>
+
+      <BmiCard bmi={bmi} />
 
       <div className="grid gap-5 lg:grid-cols-3">
         <section className="app-card space-y-5 p-6 lg:col-span-2">

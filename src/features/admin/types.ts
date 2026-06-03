@@ -18,6 +18,8 @@ export interface AdminHabitPlansQuery {
   page: number;
   limit: number;
   status: "ACTIVE" | "COMPLETED" | "ABANDONED" | "";
+  /** Optional server-side filter; also used to scope a single user's plans. */
+  userId?: string;
 }
 
 export const adminUserSchema = z.object({

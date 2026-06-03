@@ -38,7 +38,11 @@ export interface AdminHabitPlansResponse {
   pagination: Pagination | null;
 }
 
-/** Tolerate either a paginated envelope or a bare array of plans. */
+/**
+ * Tolerate the real envelope ({ data: [...], total, page, limit }), a nested
+ * `pagination` object, or a bare array. `totalPages` is derived when the API
+ * only sends flat counts.
+ */
 function normalizeHabitPlans(raw: unknown): AdminHabitPlansResponse {
   if (Array.isArray(raw)) {
     return { habitPlans: raw as AdminHabitPlanSummary[], pagination: null };
@@ -48,14 +52,25 @@ function normalizeHabitPlans(raw: unknown): AdminHabitPlansResponse {
     unknown
   >;
   const list =
+    (Array.isArray(record.data) && record.data) ||
     (Array.isArray(record.habitPlans) && record.habitPlans) ||
     (Array.isArray(record.plans) && record.plans) ||
     (Array.isArray(record.items) && record.items) ||
     [];
-  const pagination =
-    record.pagination && typeof record.pagination === "object"
-      ? (record.pagination as Pagination)
-      : null;
+
+  let pagination: Pagination | null = null;
+  if (record.pagination && typeof record.pagination === "object") {
+    pagination = record.pagination as Pagination;
+  } else if (typeof record.total === "number") {
+    const total = record.total;
+    const page = typeof record.page === "number" ? record.page : 1;
+    const limit =
+      typeof record.limit === "number" && record.limit > 0
+        ? record.limit
+        : list.length || 20;
+    pagination = { total, page, limit, totalPages: Math.max(1, Math.ceil(total / limit)) };
+  }
+
   return { habitPlans: list as AdminHabitPlanSummary[], pagination };
 }
 
@@ -125,6 +140,7 @@ export const adminApi = {
       limit: query.limit,
     };
     if (query.status) params.status = query.status;
+    if (query.userId) params.userId = query.userId;
     return normalizeHabitPlans(
       unwrap(await http.get("/admin/habit-plans", { params, signal })),
     );

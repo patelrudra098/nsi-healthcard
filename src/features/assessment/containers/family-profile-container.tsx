@@ -4,13 +4,14 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Info, User } from "lucide-react";
+import { ArrowRight, Info, Ruler, User } from "lucide-react";
 import { ROUTES } from "@/config/constants";
 import type { FamilyProfile } from "@/lib/types";
 import { notifySuccess } from "@/lib/notify";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth";
 import { useLanguage } from "@/lib/hooks/use-language";
+import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Switch } from "@/shared/ui/switch";
@@ -151,6 +152,8 @@ export function FamilyProfileContainer() {
       hasHealthCondition: false,
       primaryCook: "",
       healthDecisionMaker: "",
+      heightCm: "",
+      weightKg: "",
     },
   });
 
@@ -180,6 +183,8 @@ export function FamilyProfileContainer() {
       hasHealthCondition: values.hasHealthCondition,
       primaryCook: values.primaryCook?.trim() || undefined,
       healthDecisionMaker: values.healthDecisionMaker?.trim() || undefined,
+      heightCm: values.heightCm ? Number(values.heightCm) : undefined,
+      weightKg: values.weightKg ? Number(values.weightKg) : undefined,
       preferredLanguage: language,
     };
 
@@ -202,16 +207,16 @@ export function FamilyProfileContainer() {
             A little about your family
           </h1>
           <p className="text-pretty mx-auto max-w-xl text-sm text-[var(--text-muted)]">
-            This helps us understand your family context. All fields are required
-            to continue.
+            This helps us understand your family context. Height and weight are
+            optional — everything else is needed to continue.
           </p>
         </div>
 
         <div className="flex items-start gap-3 rounded-[var(--radius-md)] bg-[var(--info-soft)] px-4 py-3 text-[var(--info)]">
           <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <p className="text-sm">
-            These details give context to your scorecard — they are not scored, but
-            all fields are required to continue.
+            These details give context to your scorecard — they are not scored.
+            All fields except height and weight are required to continue.
           </p>
         </div>
 
@@ -258,9 +263,51 @@ export function FamilyProfileContainer() {
               min={1}
               max={30}
               placeholder="e.g. 4"
+              wrapperClassName="sm:col-span-2"
               {...form.register("familyMemberCount")}
               error={form.formState.errors.familyMemberCount?.message}
             />
+
+            {/* Optional body metrics — power the dashboard BMI card. */}
+            <div className="space-y-3 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] bg-[var(--surface-hover)] p-4 sm:col-span-2">
+              <div className="flex items-center gap-2">
+                <Ruler className="size-4 text-[var(--text-muted)]" aria-hidden="true" />
+                <span className="text-sm font-medium text-[var(--text-primary)]">
+                  Body metrics
+                </span>
+                <Badge variant="soft" size="sm">
+                  Optional
+                </Badge>
+              </div>
+              <p className="text-xs text-[var(--text-muted)]">
+                Add these to see your BMI tracked on your dashboard.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Input
+                  label="Your height"
+                  type="number"
+                  inputMode="numeric"
+                  min={100}
+                  max={250}
+                  placeholder="e.g. 170"
+                  suffix={<span className="text-sm">cm</span>}
+                  {...form.register("heightCm")}
+                  error={form.formState.errors.heightCm?.message}
+                />
+                <Input
+                  label="Your weight"
+                  type="number"
+                  inputMode="numeric"
+                  min={20}
+                  max={300}
+                  placeholder="e.g. 68"
+                  suffix={<span className="text-sm">kg</span>}
+                  {...form.register("weightKg")}
+                  error={form.formState.errors.weightKg?.message}
+                />
+              </div>
+            </div>
+
             <SelectField
               control={form.control}
               name="primaryCook"
@@ -276,7 +323,6 @@ export function FamilyProfileContainer() {
               placeholder="Select"
               options={toText(HEALTH_DECISION_OPTIONS)}
               error={form.formState.errors.healthDecisionMaker?.message}
-              className="sm:col-span-2"
             />
           </div>
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ChevronDown, Save, Sparkles } from "lucide-react";
+import { ArrowLeft, ChevronDown, Save } from "lucide-react";
 import { ROUTES } from "@/config/constants";
 import type { AssessmentResult, ScoreBandKey } from "@/lib/types";
 import { formatDate } from "@/lib/format";
@@ -32,8 +32,9 @@ import {
   PlanSummary,
   SectionBreakdown,
 } from "@/shared/components";
-import { useAdminUser, useUpdateUser } from "../hooks";
+import { useAdminHabitPlans, useAdminUser, useUpdateUser } from "../hooks";
 import { adminUserSchema, type AdminUserInput } from "../types";
+import { UserHabitPlans } from "../components/user-habit-plans";
 
 function AssessmentHistoryItem({ assessment }: { assessment: AssessmentResult }) {
   return (
@@ -86,6 +87,16 @@ export function AdminUserDetailContainer() {
   const id = params.id ?? "";
   const query = useAdminUser(id);
   const updateUser = useUpdateUser(id);
+  const habitPlansQuery = useAdminHabitPlans({
+    page: 1,
+    limit: 100,
+    status: "",
+    userId: id,
+  });
+  // Scope to this user even if the API ignores the userId filter.
+  const userHabitPlans = (habitPlansQuery.data?.habitPlans ?? []).filter(
+    (plan) => plan.user.id === id,
+  );
 
   const form = useForm<AdminUserInput>({
     resolver: zodResolver(adminUserSchema),
@@ -236,24 +247,16 @@ export function AdminUserDetailContainer() {
       <section className="app-card space-y-4 p-6">
         <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
           Habit challenge
-        </h2>
-        <div className="flex flex-col gap-4 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[var(--primary)]">
-              <Sparkles className="size-[18px]" aria-hidden="true" />
+          {userHabitPlans.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-[var(--text-muted)]">
+              ({userHabitPlans.length})
             </span>
-            <p className="text-sm text-[var(--text-secondary)]">
-              View this member&apos;s 21-day habit challenge — progress, habits,
-              and weekly check-ins.
-            </p>
-          </div>
-          <Button variant="secondary" size="sm" asChild className="shrink-0">
-            <Link href={ROUTES.adminHabitPlans}>
-              Open habit plans
-              <ArrowLeft className="size-4 rotate-180" aria-hidden="true" />
-            </Link>
-          </Button>
-        </div>
+          )}
+        </h2>
+        <UserHabitPlans
+          plans={userHabitPlans}
+          isLoading={habitPlansQuery.isLoading}
+        />
       </section>
     </div>
   );

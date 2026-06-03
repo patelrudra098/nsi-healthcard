@@ -109,6 +109,9 @@ export interface FamilyProfile {
   primaryCook?: string | null;
   healthDecisionMaker?: string | null;
   preferredLanguage?: string | null;
+  /** Optional body metrics — drive the dashboard BMI card. */
+  heightCm?: number | null;
+  weightKg?: number | null;
 }
 
 export interface ActiveAssessment {
@@ -174,10 +177,21 @@ export interface AssessmentAnswers {
   questionAnswers: QuestionAnswer[];
 }
 
+/** Body-mass-index summary computed by the backend from height + weight. */
+export interface BMIResult {
+  value: number;
+  category: string;
+  colorKey: "blue" | "green" | "yellow" | "orange" | "red";
+  heightCm: number;
+  weightKg: number;
+}
+
 export interface DashboardResponse {
   user: User;
   latestAssessment: AssessmentResult | null;
   assessmentHistory: AssessmentHistoryItem[];
+  /** Null until the user fills in height + weight on their family profile. */
+  bmi: BMIResult | null;
   stats: {
     totalCompletedAssessments: number;
     scoreTrend: number | null;
@@ -286,17 +300,19 @@ export interface CheckInResult {
   shouldReassess: boolean;
 }
 
+/** A row from GET /admin/habit-plans (envelope: data.data[], flat total/page/limit). */
 export interface AdminHabitPlanSummary {
-  id: string;
+  planId: string;
+  user: { id: string; name: string; mobile: string };
   status: HabitPlanStatus;
   startDate: string;
-  progressPercent: number;
   currentMonth: 1 | 2 | 3;
-  sectionKeys: string[];
-  checkInsCompleted: number;
-  totalWeeks: number;
-  lastActiveAt: string | null;
-  user: { id: string; name: string; mobile: string };
+  progressPercent: number;
+  totalCheckIns: number;
+  /** Section keys the round focuses on, e.g. ["ACTIVITY"]. */
+  habits: string[];
+  lastCheckIn: string | null;
+  avgRating: number | null;
 }
 
 export interface AdminHabitPlanDetail extends HabitPlan {
