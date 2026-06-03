@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm, type Control } from "react-hook-form";
+import { Controller, useForm, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Info, Ruler, User } from "lucide-react";
+import { ArrowRight, Check, Info, Phone, Ruler, User } from "lucide-react";
 import { ROUTES } from "@/config/constants";
 import type { FamilyProfile } from "@/lib/types";
 import { notifySuccess } from "@/lib/notify";
@@ -27,8 +27,25 @@ import { CityStateFields } from "../components/city-state-fields";
 import { LanguageSelector } from "../components/language-selector";
 import { useResolveAssessmentId, useSaveFamilyProfile } from "../hooks";
 import { familyProfileSchema, type FamilyProfileInput } from "../types";
+import { loadFamilyProfileDraft, saveFamilyProfileDraft } from "../draft";
 
 const SLEEP_ROUTE = ROUTES.assessmentSection("SLEEP");
+
+/** Deterministic empty form — also the base we merge a saved draft onto. */
+const EMPTY_PROFILE: FamilyProfileInput = {
+  city: "",
+  state: "",
+  age: "",
+  maritalStatus: "",
+  familyMemberCount: "",
+  hasChildren: false,
+  hasElderlyParents: false,
+  hasHealthCondition: false,
+  primaryCook: "",
+  healthDecisionMaker: "",
+  heightCm: "",
+  weightKg: "",
+};
 
 const MARITAL_OPTIONS = [
   { value: "MARRIED", label: "Married" },
@@ -141,25 +158,44 @@ export function FamilyProfileContainer() {
 
   const form = useForm<FamilyProfileInput>({
     resolver: zodResolver(familyProfileSchema),
-    defaultValues: {
-      city: "",
-      state: "",
-      age: "",
-      maritalStatus: "",
-      familyMemberCount: "",
-      hasChildren: false,
-      hasElderlyParents: false,
-      hasHealthCondition: false,
-      primaryCook: "",
-      healthDecisionMaker: "",
-      heightCm: "",
-      weightKg: "",
-    },
+    // Starts empty so server and client first render match; a saved draft is
+    // applied after mount in the restore effect below (avoids hydration drift).
+    defaultValues: EMPTY_PROFILE,
   });
+
+  const restoredRef = useRef(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (isMissing) router.replace(ROUTES.welcome);
   }, [isMissing, router]);
+
+  // Restore the user's last-entered details once (don't clobber live edits).
+  useEffect(() => {
+    if (restoredRef.current || !user?.id) return;
+    restoredRef.current = true;
+    const draft = loadFamilyProfileDraft(user.id);
+    if (draft && !form.formState.isDirty) {
+      form.reset({ ...EMPTY_PROFILE, ...draft });
+    }
+  }, [user?.id, form]);
+
+  // Autosave every edit (debounced) so a refresh or back-navigation loses nothing.
+  const watchedValues = useWatch({ control: form.control });
+  useEffect(() => {
+    const uid = user?.id;
+    // Wait until the restore pass has run so we never overwrite a saved draft
+    // with the empty initial values.
+    if (!uid || !restoredRef.current) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(
+      () => saveFamilyProfileDraft(uid, watchedValues as FamilyProfileInput),
+      400,
+    );
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [watchedValues, user?.id]);
 
   if (isResolving || isMissing || !assessmentId) {
     return (
@@ -170,6 +206,9 @@ export function FamilyProfileContainer() {
   }
 
   const onSubmit = (values: FamilyProfileInput) => {
+    // Remember the latest values so a future assessment is pre-filled.
+    saveFamilyProfileDraft(user?.id, values);
+
     const body: FamilyProfile = {
       city: values.city?.trim() || undefined,
       state: values.state?.trim() || undefined,
@@ -234,7 +273,15 @@ export function FamilyProfileContainer() {
               helper="From your account"
               readOnly
               disabled
-              wrapperClassName="sm:col-span-2"
+            />
+            <Input
+              label="Mobile number"
+              value={user?.mobile ?? ""}
+              prefix={<Phone className="size-4" />}
+              helper="From your account"
+              inputMode="tel"
+              readOnly
+              disabled
             />
             <CityStateFields form={form} />
             <Input
@@ -362,7 +409,14 @@ export function FamilyProfileContainer() {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex flex-col-reverse items-center gap-3 sm:flex-row sm:justify-between">
+          <p className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+            <Check
+              className="size-3.5 text-[var(--success)]"
+              aria-hidden="true"
+            />
+            Your details are saved on this device for next time
+          </p>
           <Button type="submit" size="lg" isLoading={saveProfile.isPending}>
             Save &amp; continue
             <ArrowRight className="size-4" aria-hidden="true" />

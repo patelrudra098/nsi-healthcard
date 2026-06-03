@@ -100,6 +100,7 @@ export const STORAGE_KEYS = {
   accessToken: "nsi_access_token",
   user: "nsi_user",
   assessmentFlow: "nsi_assessment_flow",
+  familyProfileDraft: "nsi_family_profile_draft",
   preferredLanguage: "nsi_preferred_language",
   voiceGender: "nsi_voice_gender",
 } as const;

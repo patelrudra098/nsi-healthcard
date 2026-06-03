@@ -1,9 +1,7 @@
 "use client";
 
-import { Square, Volume2 } from "lucide-react";
 import type { Question } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useTTS } from "@/lib/hooks/use-tts";
 import { ScoreSelector } from "./score-selector";
 import { ScoreOptions } from "./score-options";
 
@@ -14,8 +12,6 @@ interface QuestionCardProps {
   onChange: (score: number) => void;
   /** Highlights the card when the user tried to advance without answering. */
   invalid?: boolean;
-  /** BCP-47 tag used to read the question aloud. */
-  speechCode: string;
 }
 
 /** A scored question: text and a 1–5 selector. */
@@ -25,11 +21,9 @@ export function QuestionCard({
   value,
   onChange,
   invalid,
-  speechCode,
 }: QuestionCardProps) {
   const examples = question.examples;
   const hasExamples = Array.isArray(examples) && examples.length > 0;
-  const { speak, stop, isSpeaking, isSupported } = useTTS();
 
   return (
     <div
@@ -48,23 +42,6 @@ export function QuestionCard({
             {question.text}
           </p>
         </div>
-        {isSupported && (
-          <button
-            type="button"
-            onClick={() =>
-              isSpeaking ? stop() : speak(question.text, speechCode)
-            }
-            aria-label={isSpeaking ? "Stop reading" : "Read question aloud"}
-            aria-pressed={isSpeaking}
-            className="grid size-8 shrink-0 place-items-center rounded-full text-[var(--text-muted)] outline-none transition-colors hover:bg-[var(--muted)] hover:text-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-          >
-            {isSpeaking ? (
-              <Square className="size-4 fill-current" aria-hidden="true" />
-            ) : (
-              <Volume2 className="size-4" aria-hidden="true" />
-            )}
-          </button>
-        )}
       </div>
 
       {hasExamples ? (
